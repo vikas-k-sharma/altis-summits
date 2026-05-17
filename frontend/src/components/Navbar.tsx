@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { Mountain, Menu, X } from 'lucide-react';
+import { logoutUser } from '@/actions/auth';
 
 function NavItem({
   label,
@@ -33,7 +34,7 @@ function NavItem({
   return inner;
 }
 
-export default function Navbar() {
+export default function Navbar({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -61,7 +62,21 @@ export default function Navbar() {
             active={pathname.startsWith('/treks')}
           />
           <NavItem label="Regions" />
-          <NavItem label="About" />
+          {isLoggedIn ? (
+            <button 
+              onClick={() => logoutUser()}
+              className="text-sm font-medium tracking-wide text-zinc-400 hover:text-white transition-colors"
+            >
+              Sign Out
+            </button>
+          ) : (
+            <Link 
+              href="/login"
+              className="text-sm font-medium tracking-wide text-zinc-400 hover:text-white transition-colors"
+            >
+              Sign In
+            </Link>
+          )}
           <Link
             href="/treks"
             className="px-6 py-2 bg-white text-slate-950 text-sm font-semibold rounded-full hover:bg-cyan-400 transition-colors"
@@ -93,9 +108,22 @@ export default function Navbar() {
           <span className="block text-sm font-medium text-zinc-500 cursor-default">
             Regions
           </span>
-          <span className="block text-sm font-medium text-zinc-500 cursor-default">
-            About
-          </span>
+          {isLoggedIn ? (
+            <button
+              onClick={() => logoutUser()}
+              className="block text-sm font-medium text-zinc-300 hover:text-white transition-colors text-left"
+            >
+              Sign Out
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setMobileOpen(false)}
+              className="block text-sm font-medium text-zinc-300 hover:text-white transition-colors"
+            >
+              Sign In
+            </Link>
+          )}
           <Link
             href="/treks"
             onClick={() => setMobileOpen(false)}

@@ -1,9 +1,12 @@
 'use client';
 
+import { useState, useTransition } from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Users, Calendar, Info } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { ItineraryDay, TrekDeparture } from '@/lib/types';
+import { bookTrek } from '@/actions/auth';
 
 interface DetailHeroProps {
   name: string;
@@ -15,6 +18,7 @@ interface DetailHeroProps {
   overview: string;
   itinerary: ItineraryDay[];
   departures: TrekDeparture[];
+  isLoggedIn: boolean;
 }
 
 export default function DetailHero({
@@ -27,9 +31,56 @@ export default function DetailHero({
   overview,
   itinerary,
   departures,
+  isLoggedIn,
 }: DetailHeroProps) {
+  const router = useRouter();
+  const [selectedDepartureId, setSelectedDepartureId] = useState<number | null>(null);
+  const [isPending, startTransition] = useTransition();
+
   // Sort itinerary by dayNumber just to be safe
   const sortedItinerary = [...itinerary].sort((a, b) => a.dayNumber - b.dayNumber);
+
+  const handleBookNow = () => {
+    if (!selectedDepartureId) return;
+    
+    if (!isLoggedIn) {
+      router.push('/login');
+      return;
+    }
+
+    startTransition(async () => {
+      await bookTrek(selectedDepartureId);
+    });
+  };
+
+  let buttonContent;
+  let isButtonDisabled = isPending;
+
+  const isSoldOut = departures.length === 0 || departures.every(d => d.availableSeats === 0 || d.status.toLowerCase() === 'full');
+
+  if (isPending) {
+    buttonContent = (
+      <motion.div 
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+        className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full"
+      />
+    );
+  } else if (isSoldOut) {
+    buttonContent = 'Sold Out';
+    isButtonDisabled = true;
+  } else if (!selectedDepartureId) {
+    buttonContent = 'Select a Date';
+    isButtonDisabled = true;
+  } else if (!isLoggedIn) {
+    buttonContent = 'Log in to Book';
+  } else {
+    buttonContent = (
+      <>
+        Request Booking <ArrowRight className="w-5 h-5" />
+      </>
+    );
+  }
 
   return (
     <motion.div
@@ -165,13 +216,18 @@ export default function DetailHero({
                   <div className="space-y-2">
                     {departures.map((dep) => {
                       const isFull = dep.availableSeats === 0 || dep.status.toLowerCase() === 'full';
+                      const isSelected = selectedDepartureId === dep.id;
+                      
                       return (
                         <div 
                           key={dep.id} 
-                          className={`p-4 rounded-xl border flex flex-col gap-1 cursor-pointer transition-colors ${
+                          onClick={() => !isFull && setSelectedDepartureId(dep.id)}
+                          className={`p-4 rounded-xl border flex flex-col gap-1 transition-colors ${
                             isFull 
                               ? 'bg-zinc-950/50 border-white/5 opacity-50 cursor-not-allowed' 
-                              : 'bg-white/5 border-white/10 hover:border-cyan-500/50 hover:bg-white/10'
+                              : isSelected
+                                ? 'bg-cyan-500/10 border-cyan-500 cursor-pointer'
+                                : 'bg-white/5 border-white/10 hover:border-cyan-500/50 hover:bg-white/10 cursor-pointer'
                           }`}
                         >
                           <div className="flex justify-between items-center">
@@ -198,10 +254,11 @@ export default function DetailHero({
             </div>
 
             <button 
+              onClick={handleBookNow}
               className="w-full py-5 bg-cyan-500 text-slate-950 font-bold rounded-2xl hover:bg-cyan-400 transition-all flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={departures.length === 0 || departures.every(d => d.availableSeats === 0 || d.status.toLowerCase() === 'full')}
+              disabled={isButtonDisabled}
             >
-              Request Booking <ArrowRight className="w-5 h-5" />
+              {buttonContent}
             </button>
             <p className="text-[10px] text-center text-zinc-500 uppercase tracking-widest font-bold">
               Secure booking portal protected by Altis Guard

@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import DetailHero from '@/components/DetailHero';
@@ -67,6 +68,8 @@ export default async function TrekDetailPage({
   }
 
   const departures = await getDepartures(trek.id);
+  const cookieStore = await cookies();
+  const isLoggedIn = !!cookieStore.get('token')?.value;
 
   const overview = `This expedition takes you through the heart of the ${trek.region}, offering unparalleled views of some of the highest peaks on Earth. Designed for experienced trekkers who demand both challenge and sophistication.`;
 
@@ -81,6 +84,7 @@ export default async function TrekDetailPage({
       overview={overview}
       itinerary={trek.itinerary || []}
       departures={departures || []}
+      isLoggedIn={isLoggedIn}
     />
   );
 }

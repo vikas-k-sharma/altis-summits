@@ -1,10 +1,12 @@
 package com.altis.altissummits.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.locationtech.jts.geom.Point;
 
 import java.time.LocalDateTime;
 
@@ -31,6 +33,12 @@ public class Trek {
     // Categorization
     private String country; // e.g., "India", "Nepal"
     private String region;  // e.g., "Uttarakhand", "Himachal"
+
+    // Geographic Point (Longitude, Latitude)
+    // 4326 is the standard GPS coordinate system (WGS 84)
+    @Column(columnDefinition = "geometry(Point,4326)")
+    @JsonIgnore // We ignore this directly because standard JSON can't read geographic binary data easily
+    private Point startLocation;
 
     // Strict Enum for filtering
     @Enumerated(EnumType.STRING)

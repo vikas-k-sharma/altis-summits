@@ -4,6 +4,7 @@ import com.altis.altissummits.entity.ItineraryDay;
 import com.altis.altissummits.entity.Trek;
 import com.altis.altissummits.repository.TrekRepository;
 import lombok.RequiredArgsConstructor;
+import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -46,5 +47,9 @@ public class TrekService {
 
         // Save to the database
         return trekRepository.save(trek);
+    }
+
+    public List<Trek> getTreksNearby(Point userLocation, double radius) {
+        return trekRepository.findTreksNearLocation(userLocation, radius);
     }
 }

@@ -1,26 +1,49 @@
-spring:
-  application:
-    name: altis-summits
+#spring:
+#  application:
+#    name: altis-summits
+#
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/altis
+#    username: altis_app
+#    password: Altisdev@2026 # e.g., AltisDev2026!
+#    driver-class-name: org.postgresql.Driver
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
+#        dialect: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
+#
+#logging:
+#  level:
+#    org.hibernate.SQL: DEBUG
+#    org.hibernate.orm.jdbc.bind: TRACE
 
+spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/altis
-    username: altis_app
-    password: Altisdev@2026 # e.g., AltisDev2026!
+    # Use the environment variable, or fallback to localhost for local testing
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/altis}
+    username: ${DB_USERNAME:altis_app}
+    password: ${DB_PASSWORD:Altisdev@2026}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
-        dialect: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
-logging:
-  level:
-    org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
+# Custom JWT configuration
+application:
+  security:
+    jwt:
+      # Use an env variable for the secret key so it isn't hardcoded in git
+      secret-key: ${JWT_SECRET_KEY:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
 
 server:
   port: 8080

@@ -62,6 +62,13 @@ export default function Navbar({ isLoggedIn }: { isLoggedIn?: boolean }) {
             active={pathname.startsWith('/treks')}
           />
           <NavItem label="Regions" />
+          {isLoggedIn && (
+            <NavItem
+              label="Admin Portal"
+              href="/dashboard/add-trek"
+              active={pathname.startsWith('/dashboard')}
+            />
+          )}
           {isLoggedIn ? (
             <button 
               onClick={() => logoutUser()}
@@ -108,6 +115,15 @@ export default function Navbar({ isLoggedIn }: { isLoggedIn?: boolean }) {
           <span className="block text-sm font-medium text-zinc-500 cursor-default">
             Regions
           </span>
+          {isLoggedIn && (
+            <Link
+              href="/dashboard/add-trek"
+              onClick={() => setMobileOpen(false)}
+              className="block text-sm font-medium text-zinc-300 hover:text-white transition-colors"
+            >
+              Admin Portal
+            </Link>
+          )}
           {isLoggedIn ? (
             <button
               onClick={() => logoutUser()}

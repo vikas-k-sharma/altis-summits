@@ -70,28 +70,32 @@ export default function AddTrekForm() {
 
   const handleLatChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    setLatInput(val);
-    const lat = parseFloat(val);
-    const lon = parseFloat(lonInput);
-    if (!isNaN(lat) && !isNaN(lon)) {
-      setPosition([lat, lon]);
-    } else {
-      if (val === '' && lonInput === '') {
-        setPosition(null);
+    if (val === '' || val === '-' || /^-?\d*\.?\d*$/.test(val)) {
+      setLatInput(val);
+      const lat = parseFloat(val);
+      const lon = parseFloat(lonInput);
+      if (!isNaN(lat) && !isNaN(lon)) {
+        setPosition([lat, lon]);
+      } else {
+        if (val === '' && lonInput === '') {
+          setPosition(null);
+        }
       }
     }
   };
 
   const handleLonChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    setLonInput(val);
-    const lat = parseFloat(latInput);
-    const lon = parseFloat(val);
-    if (!isNaN(lat) && !isNaN(lon)) {
-      setPosition([lat, lon]);
-    } else {
-      if (latInput === '' && val === '') {
-        setPosition(null);
+    if (val === '' || val === '-' || /^-?\d*\.?\d*$/.test(val)) {
+      setLonInput(val);
+      const lat = parseFloat(latInput);
+      const lon = parseFloat(val);
+      if (!isNaN(lat) && !isNaN(lon)) {
+        setPosition([lat, lon]);
+      } else {
+        if (latInput === '' && val === '') {
+          setPosition(null);
+        }
       }
     }
   };
@@ -114,13 +118,8 @@ export default function AddTrekForm() {
               <Input name="title" placeholder="Annapurna Sanctuary Traverse" required />
             </Field>
 
-            <Field label="Region Range">
-              <Select name="region" defaultValue="Himalayas Range" required>
-                <option value="Himalayas Range">Himalayas Range</option>
-                <option value="Karakoram Range">Karakoram Range</option>
-                <option value="Andes Range">Andes Range</option>
-                <option value="Alps Range">Alps Range</option>
-              </Select>
+            <Field label="Region">
+              <Input name="region" placeholder="Nepal Himalaya" required />
             </Field>
 
             <Field label="Difficulty">
@@ -161,34 +160,7 @@ export default function AddTrekForm() {
               />
             </Field>
 
-            <div className="grid grid-cols-2 gap-3 md:col-span-2">
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3 focus-within:border-cyan-500 transition-colors">
-                <label htmlFor="startLat" className="block text-[9px] font-bold uppercase tracking-widest text-zinc-500">GPS Latitude (N)</label>
-                <input
-                  id="startLat"
-                  name="startLat"
-                  type="number"
-                  step="any"
-                  value={latInput}
-                  onChange={handleLatChange}
-                  placeholder="e.g. 28.3949"
-                  className="mt-1 block w-full bg-transparent border-0 p-0 text-sm font-semibold text-zinc-200 focus:outline-none focus:ring-0 placeholder-zinc-600"
-                />
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3 focus-within:border-cyan-500 transition-colors">
-                <label htmlFor="startLon" className="block text-[9px] font-bold uppercase tracking-widest text-zinc-500">GPS Longitude (E)</label>
-                <input
-                  id="startLon"
-                  name="startLon"
-                  type="number"
-                  step="any"
-                  value={lonInput}
-                  onChange={handleLonChange}
-                  placeholder="e.g. 84.1240"
-                  className="mt-1 block w-full bg-transparent border-0 p-0 text-sm font-semibold text-zinc-200 focus:outline-none focus:ring-0 placeholder-zinc-600"
-                />
-              </div>
-            </div>
+
 
             <Button
               type="submit"
@@ -227,23 +199,34 @@ export default function AddTrekForm() {
             </div>
           </div>
 
-          <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-4">
-            <span className="block text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-2">
-              Calculated Trailhead Coordinate Payload
-            </span>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <span className="block text-[8px] font-bold uppercase text-zinc-500">Latitude:</span>
-                <span className="text-xs font-mono font-bold tracking-tight text-white block mt-0.5">
-                  {latInput ? latInput : 'CLICK TO CONFIGURE'}
-                </span>
-              </div>
-              <div>
-                <span className="block text-[8px] font-bold uppercase text-zinc-500">Longitude:</span>
-                <span className="text-xs font-mono font-bold tracking-tight text-white block mt-0.5">
-                  {lonInput ? lonInput : 'CLICK TO CONFIGURE'}
-                </span>
-              </div>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3 focus-within:border-cyan-500 transition-colors">
+              <label htmlFor="startLat" className="block text-[9px] font-bold uppercase tracking-widest text-zinc-500">GPS Latitude (N)</label>
+              <input
+                id="startLat"
+                name="startLat"
+                type="text"
+                inputMode="decimal"
+                value={latInput}
+                onChange={handleLatChange}
+                placeholder="e.g. 28.3949"
+                className="mt-1 block w-full bg-transparent border-0 p-0 text-sm font-semibold text-zinc-200 focus:outline-none focus:ring-0 placeholder-zinc-600 font-mono"
+                autoComplete="off"
+              />
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3 focus-within:border-cyan-500 transition-colors">
+              <label htmlFor="startLon" className="block text-[9px] font-bold uppercase tracking-widest text-zinc-500">GPS Longitude (E)</label>
+              <input
+                id="startLon"
+                name="startLon"
+                type="text"
+                inputMode="decimal"
+                value={lonInput}
+                onChange={handleLonChange}
+                placeholder="e.g. 84.1240"
+                className="mt-1 block w-full bg-transparent border-0 p-0 text-sm font-semibold text-zinc-200 focus:outline-none focus:ring-0 placeholder-zinc-600 font-mono"
+                autoComplete="off"
+              />
             </div>
           </div>
 

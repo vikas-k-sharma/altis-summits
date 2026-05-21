@@ -1,6 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import type { ItineraryDay } from '@/lib/types';
 
 export interface CreateTrekState {
   status: 'idle' | 'success' | 'error';
@@ -31,7 +32,7 @@ function readString(formData: FormData, key: string) {
 export async function createTrek(
   _prevState: CreateTrekState,
   formData: FormData
- ): Promise<CreateTrekState> {
+): Promise<CreateTrekState> {
   const missingField = REQUIRED_FIELDS.find((field) => !readString(formData, field));
 
   if (missingField) {
@@ -115,6 +116,117 @@ export async function createTrek(
     };
   } catch (error) {
     console.error('Create trek error:', error);
+    return {
+      status: 'error',
+      message: 'Unable to reach the trek service. Please try again.',
+    };
+  }
+}
+
+export interface TrekOption {
+  id: number;
+  title: string;
+  slug: string;
+  region: string;
+  isActive: boolean;
+}
+
+// 1. Fetch trek options for dropdown
+export async function getTrekOptions(): Promise<TrekOption[]> {
+  const token = (await cookies()).get('token')?.value;
+  if (!token) {
+    throw new Error('Unauthorized: No admin token found.');
+  }
+
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/treks/admin/options`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to fetch trek options: status ${res.status}`);
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error('getTrekOptions error:', error);
+    throw error;
+  }
+}
+
+// 2. Fetch itinerary days for a specific trek
+export async function getItineraryDays(slug: string): Promise<ItineraryDay[]> {
+  const token = (await cookies()).get('token')?.value;
+  if (!token) {
+    throw new Error('Unauthorized: No admin token found.');
+  }
+
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/treks/${slug}/itinerary`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      if (res.status === 404) {
+        return [];
+      }
+      throw new Error(`Failed to fetch itinerary: status ${res.status}`);
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error(`getItineraryDays error for ${slug}:`, error);
+    throw error;
+  }
+}
+
+// 3. Save full itinerary list for a trek
+export async function saveItineraryDays(
+  slug: string,
+  days: ItineraryDay[]
+): Promise<{ status: 'success' | 'error'; message: string; data?: ItineraryDay[] }> {
+  const token = (await cookies()).get('token')?.value;
+  if (!token) {
+    return {
+      status: 'error',
+      message: 'You must be signed in as an admin to save the itinerary.',
+    };
+  }
+
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/treks/${slug}/itinerary`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(days),
+    });
+
+    if (!res.ok) {
+      let message = `Failed to save itinerary with status ${res.status}.`;
+      try {
+        const errorBody = await res.json();
+        message = errorBody.message ?? errorBody.error ?? message;
+      } catch {
+        const text = await res.text();
+        message = text || message;
+      }
+      return { status: 'error', message };
+    }
+
+    const data = await res.json();
+    return {
+      status: 'success',
+      message: 'Itinerary days successfully updated and saved in the catalog.',
+      data,
+    };
+  } catch (error) {
+    console.error('saveItineraryDays error:', error);
     return {
       status: 'error',
       message: 'Unable to reach the trek service. Please try again.',

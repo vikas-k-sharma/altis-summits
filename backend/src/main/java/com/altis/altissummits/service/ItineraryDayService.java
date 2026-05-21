@@ -8,9 +8,12 @@ import com.altis.altissummits.repository.TrekRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +36,26 @@ public class ItineraryDayService {
         applyFields(itineraryDay, dto, false);
 
         return itineraryDayRepository.save(itineraryDay);
+    }
+
+    @Transactional
+    public List<ItineraryDay> replaceItineraryForTrek(String slug, List<ItineraryDayRequestDTO> itineraryDays) {
+        validateBulkRequest(itineraryDays);
+
+        Trek trek = findTrekBySlug(slug);
+        itineraryDayRepository.deleteByTrekSlug(slug);
+
+        List<ItineraryDay> days = itineraryDays.stream()
+                .map(dto -> {
+                    ItineraryDay itineraryDay = new ItineraryDay();
+                    itineraryDay.setTrek(trek);
+                    applyFields(itineraryDay, dto, false);
+                    return itineraryDay;
+                })
+                .toList();
+
+        itineraryDayRepository.saveAll(days);
+        return itineraryDayRepository.findByTrekSlugOrderByDayNumberAsc(slug);
     }
 
     public ItineraryDay updateItineraryDay(String slug, Long dayId, ItineraryDayRequestDTO dto) {
@@ -94,6 +117,29 @@ public class ItineraryDayService {
         if (dto.getDayNumber() != null
                 && itineraryDayRepository.existsByTrekSlugAndDayNumberAndIdNot(slug, dto.getDayNumber(), dayId)) {
             throw badRequest("Itinerary day number already exists for this trek.");
+        }
+    }
+
+    private void validateBulkRequest(List<ItineraryDayRequestDTO> itineraryDays) {
+        if (itineraryDays == null) {
+            throw badRequest("Itinerary day list is required.");
+        }
+
+        Set<Integer> dayNumbers = new HashSet<>();
+        for (ItineraryDayRequestDTO dto : itineraryDays) {
+            validateRequestBody(dto);
+
+            if (dto.getDayNumber() == null) {
+                throw badRequest("Day number is required for every itinerary day.");
+            }
+            if (dto.getTitle() == null || dto.getTitle().isBlank()) {
+                throw badRequest("Title is required for every itinerary day.");
+            }
+
+            validateCommonFields(dto);
+            if (!dayNumbers.add(dto.getDayNumber())) {
+                throw badRequest("Duplicate itinerary day number: " + dto.getDayNumber());
+            }
         }
     }
 

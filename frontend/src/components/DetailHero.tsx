@@ -8,6 +8,11 @@ import { useRouter } from 'next/navigation';
 import type { ItineraryDay, TrekDeparture } from '@/lib/types';
 import { bookTrek } from '@/actions/auth';
 
+const parseDateInLocal = (dateStr: string) => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
 interface DetailHeroProps {
   name: string;
   region: string;
@@ -56,7 +61,13 @@ export default function DetailHero({
   let buttonContent;
   let isButtonDisabled = isPending;
 
-  const isSoldOut = departures.length === 0 || departures.every(d => d.availableSeats === 0 || d.status.toLowerCase() === 'full');
+  const isSoldOut = departures.length === 0 || departures.every(d => 
+    d.availableSeats === 0 || 
+    d.status.toLowerCase() === 'full' ||
+    d.status === 'CANCELLED' ||
+    d.status === 'COMPLETED' ||
+    d.status === 'IN_PROGRESS'
+  );
 
   if (isPending) {
     buttonContent = (
@@ -215,31 +226,61 @@ export default function DetailHero({
                 {departures.length > 0 ? (
                   <div className="space-y-2">
                     {departures.map((dep) => {
-                      const isFull = dep.availableSeats === 0 || dep.status.toLowerCase() === 'full';
+                      const isUnavailable = 
+                        dep.availableSeats === 0 || 
+                        dep.status.toLowerCase() === 'full' ||
+                        dep.status === 'CANCELLED' ||
+                        dep.status === 'COMPLETED' ||
+                        dep.status === 'IN_PROGRESS';
                       const isSelected = selectedDepartureId === dep.id;
-                      
+
+                      const startDateLocal = parseDateInLocal(dep.startDate);
+                      const endDateLocal = parseDateInLocal(dep.endDate);
+
+                      let badgeText = '';
+                      let badgeColor = '';
+                      if (dep.status === 'CANCELLED') {
+                        badgeText = 'Cancelled';
+                        badgeColor = 'text-red-400 border-red-500/20 bg-red-950/20';
+                      } else if (dep.status === 'COMPLETED') {
+                        badgeText = 'Completed';
+                        badgeColor = 'text-zinc-400 border-zinc-500/20 bg-zinc-950/10';
+                      } else if (dep.status === 'IN_PROGRESS') {
+                        badgeText = 'In Progress';
+                        badgeColor = 'text-amber-400 border-amber-500/20 bg-amber-950/15';
+                      } else {
+                        // SCHEDULED
+                        if (dep.availableSeats === 0 || dep.status.toLowerCase() === 'full') {
+                          badgeText = 'Full';
+                          badgeColor = 'text-red-400 border-red-500/20 bg-red-950/20';
+                        } else {
+                          badgeText = `${dep.availableSeats} Left`;
+                          badgeColor = 'text-cyan-400 border-cyan-500/20 bg-cyan-950/20';
+                        }
+                      }
+
                       return (
                         <div 
                           key={dep.id} 
-                          onClick={() => !isFull && setSelectedDepartureId(dep.id)}
-                          className={`p-4 rounded-xl border flex flex-col gap-1 transition-colors ${
-                            isFull 
+                          onClick={() => !isUnavailable && setSelectedDepartureId(dep.id)}
+                          className={`p-4 rounded-xl border flex flex-col gap-2 transition-colors ${
+                            isUnavailable 
                               ? 'bg-zinc-950/50 border-white/5 opacity-50 cursor-not-allowed' 
                               : isSelected
                                 ? 'bg-cyan-500/10 border-cyan-500 cursor-pointer'
                                 : 'bg-white/5 border-white/10 hover:border-cyan-500/50 hover:bg-white/10 cursor-pointer'
                           }`}
                         >
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-semibold text-white">
-                              {new Date(dep.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(dep.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          <div className="flex justify-between items-start gap-4">
+                            <span className="text-xs font-semibold text-white leading-normal">
+                              {startDateLocal.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {endDateLocal.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </span>
-                            <span className={`text-xs font-bold uppercase ${isFull ? 'text-red-400' : 'text-cyan-400'}`}>
-                              {isFull ? 'Full' : `${dep.availableSeats} Left`}
+                            <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold uppercase border tracking-widest shrink-0 ${badgeColor}`}>
+                              {badgeText}
                             </span>
                           </div>
-                          <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">
-                            Status: {dep.status}
+                          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">
+                            Window Status: {dep.status}
                           </span>
                         </div>
                       );

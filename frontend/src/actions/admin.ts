@@ -1,7 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import type { ItineraryDay } from '@/lib/types';
+import type { ItineraryDay, TrekDeparture } from '@/lib/types';
 
 export interface CreateTrekState {
   status: 'idle' | 'success' | 'error';
@@ -227,6 +227,180 @@ export async function saveItineraryDays(
     };
   } catch (error) {
     console.error('saveItineraryDays error:', error);
+    return {
+      status: 'error',
+      message: 'Unable to reach the trek service. Please try again.',
+    };
+  }
+}
+
+// 4. Fetch departures for a specific trek
+export async function getTrekDepartures(slug: string): Promise<TrekDeparture[]> {
+  const token = (await cookies()).get('token')?.value;
+  if (!token) {
+    throw new Error('Unauthorized: No admin token found.');
+  }
+
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/treks/${slug}/departures`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      if (res.status === 404) {
+        return [];
+      }
+      throw new Error(`Failed to fetch departures: status ${res.status}`);
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error(`getTrekDepartures error for ${slug}:`, error);
+    throw error;
+  }
+}
+
+// 5. Save full departure list for a trek
+export async function saveTrekDepartures(
+  slug: string,
+  departures: Omit<TrekDeparture, 'id'>[]
+): Promise<{ status: 'success' | 'error'; message: string; data?: TrekDeparture[] }> {
+  const token = (await cookies()).get('token')?.value;
+  if (!token) {
+    return {
+      status: 'error',
+      message: 'You must be signed in as an admin to save departures.',
+    };
+  }
+
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/treks/${slug}/departures`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(departures),
+    });
+
+    if (!res.ok) {
+      let message = `Failed to save departures with status ${res.status}.`;
+      try {
+        const errorBody = await res.json();
+        message = errorBody.message ?? errorBody.error ?? message;
+      } catch {
+        const text = await res.text();
+        message = text || message;
+      }
+      return { status: 'error', message };
+    }
+
+    const data = await res.json();
+    return {
+      status: 'success',
+      message: 'Departure catalog successfully updated and saved.',
+      data,
+    };
+  } catch (error) {
+    console.error('saveTrekDepartures error:', error);
+    return {
+      status: 'error',
+      message: 'Unable to reach the trek service. Please try again.',
+    };
+  }
+}
+
+// 6. Add a single departure
+export async function addTrekDeparture(
+  slug: string,
+  departure: Omit<TrekDeparture, 'id'>
+): Promise<{ status: 'success' | 'error'; message: string; data?: TrekDeparture }> {
+  const token = (await cookies()).get('token')?.value;
+  if (!token) {
+    return {
+      status: 'error',
+      message: 'You must be signed in as an admin to add a departure.',
+    };
+  }
+
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/treks/${slug}/departures`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(departure),
+    });
+
+    if (!res.ok) {
+      let message = `Failed to add departure with status ${res.status}.`;
+      try {
+        const errorBody = await res.json();
+        message = errorBody.message ?? errorBody.error ?? message;
+      } catch {
+        const text = await res.text();
+        message = text || message;
+      }
+      return { status: 'error', message };
+    }
+
+    const data = await res.json();
+    return {
+      status: 'success',
+      message: 'Departure successfully added to the catalog.',
+      data,
+    };
+  } catch (error) {
+    console.error('addTrekDeparture error:', error);
+    return {
+      status: 'error',
+      message: 'Unable to reach the trek service. Please try again.',
+    };
+  }
+}
+
+// 7. Delete one departure
+export async function deleteTrekDeparture(
+  slug: string,
+  id: number
+): Promise<{ status: 'success' | 'error'; message: string }> {
+  const token = (await cookies()).get('token')?.value;
+  if (!token) {
+    return {
+      status: 'error',
+      message: 'You must be signed in as an admin to delete a departure.',
+    };
+  }
+
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/treks/${slug}/departures/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      let message = `Failed to delete departure with status ${res.status}.`;
+      try {
+        const errorBody = await res.json();
+        message = errorBody.message ?? errorBody.error ?? message;
+      } catch {
+        const text = await res.text();
+        message = text || message;
+      }
+      return { status: 'error', message };
+    }
+
+    return {
+      status: 'success',
+      message: 'Departure successfully deleted from the catalog.',
+    };
+  } catch (error) {
+    console.error('deleteTrekDeparture error:', error);
     return {
       status: 'error',
       message: 'Unable to reach the trek service. Please try again.',

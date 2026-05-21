@@ -24,11 +24,11 @@ async function getTrek(slug: string): Promise<Trek | null> {
   }
 }
 
-async function getDepartures(trekId: number): Promise<TrekDeparture[]> {
+async function getDepartures(slug: string): Promise<TrekDeparture[]> {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/treks/${trekId}/departures`,
-      { next: { revalidate: 60 } }
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/treks/${slug}/departures`,
+      { cache: 'no-store' }
     );
     if (!res.ok) return [];
     return res.json();
@@ -67,7 +67,7 @@ export default async function TrekDetailPage({
     notFound();
   }
 
-  const departures = await getDepartures(trek.id);
+  const departures = await getDepartures(trek.slug);
   const cookieStore = await cookies();
   const isLoggedIn = !!cookieStore.get('token')?.value;
 

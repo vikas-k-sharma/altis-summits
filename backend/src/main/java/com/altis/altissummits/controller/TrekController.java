@@ -20,6 +20,7 @@ import java.util.List;
 public class TrekController {
 
     public record TrekMapData(String title, String slug, double latitude, double longitude) {}
+    public record TrekOption(Long id, String title, String slug, String region, Boolean isActive) {}
 
     private static final int WGS_84_SRID = 4326;
 
@@ -29,6 +30,21 @@ public class TrekController {
     @GetMapping
     public ResponseEntity<List<Trek>> getAllTreks() {
         return ResponseEntity.ok(trekService.getAllActiveTreks());
+    }
+
+    @GetMapping("/admin/options")
+    public ResponseEntity<List<TrekOption>> getTrekOptionsForAdmin() {
+        List<TrekOption> options = trekService.getTrekOptionsForAdmin().stream()
+                .map(trek -> new TrekOption(
+                        trek.getId(),
+                        trek.getTitle(),
+                        trek.getSlug(),
+                        trek.getRegion(),
+                        trek.getIsActive()
+                ))
+                .toList();
+
+        return ResponseEntity.ok(options);
     }
 
     @GetMapping("/region/{region}")

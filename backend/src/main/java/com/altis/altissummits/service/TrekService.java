@@ -31,6 +31,12 @@ public class TrekService {
                 .toList();
     }
 
+    public List<Trek> getTrekOptionsForAdmin() {
+        return trekRepository.findAllByOrderByTitleAsc().stream()
+                .map(this::applyResponseDefaults)
+                .toList();
+    }
+
     // 2. Fetch by region
     public List<Trek> getTreksByRegion(String region) {
         return trekRepository.findByRegionAndIsActiveTrue(region).stream()

@@ -23,6 +23,8 @@ public interface TrekRepository extends JpaRepository<Trek, Long> {
     // 2. Fetch only active treks for the main catalog
     List<Trek> findByIsActiveTrue();
 
+    List<Trek> findAllByOrderByTitleAsc();
+
     // 3. Fetch treks for specific landing pages (e.g., "Uttarakhand Treks")
     List<Trek> findByRegionAndIsActiveTrue(String region);
 

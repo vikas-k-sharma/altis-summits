@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface ItineraryDayRepository extends JpaRepository<ItineraryDay, Long> {
     List<ItineraryDay> findByTrekSlugOrderByDayNumberAsc(String slug);
 
+    void deleteByTrekSlug(String slug);
+
     Optional<ItineraryDay> findByIdAndTrekSlug(Long id, String slug);
 
     boolean existsByTrekSlugAndDayNumber(String slug, Integer dayNumber);

@@ -30,6 +30,14 @@ public class ItineraryDayController {
         return ResponseEntity.status(HttpStatus.CREATED).body(itineraryDayService.createItineraryDay(slug, dto));
     }
 
+    @PutMapping
+    public ResponseEntity<List<ItineraryDay>> replaceItinerary(
+            @PathVariable String slug,
+            @RequestBody List<ItineraryDayRequestDTO> itineraryDays
+    ) {
+        return ResponseEntity.ok(itineraryDayService.replaceItineraryForTrek(slug, itineraryDays));
+    }
+
     @PatchMapping("/{dayId}")
     public ResponseEntity<ItineraryDay> updateItineraryDay(
             @PathVariable String slug,

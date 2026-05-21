@@ -33,7 +33,7 @@ function SubmitButton() {
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-950 relative">
+    <div className="min-h-screen flex items-center justify-center pt-28 pb-12 px-6 bg-slate-950 relative">
       <div className="absolute inset-0 z-0">
         <img 
           src="https://images.unsplash.com/photo-1544198365-f5d60b6d8190?auto=format&fit=crop&q=80&w=2600" 

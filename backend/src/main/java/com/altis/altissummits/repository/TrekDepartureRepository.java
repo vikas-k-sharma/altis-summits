@@ -14,5 +14,7 @@ public interface TrekDepartureRepository extends JpaRepository<TrekDeparture, Lo
 
     List<TrekDeparture> findByTrekSlugOrderByStartDateAsc(String slug);
 
+    void deleteByTrekSlug(String slug);
+
     Optional<TrekDeparture> findByIdAndTrekSlug(Long id, String slug);
 }

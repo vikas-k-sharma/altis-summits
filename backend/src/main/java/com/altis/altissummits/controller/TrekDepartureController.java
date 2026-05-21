@@ -30,6 +30,14 @@ public class TrekDepartureController {
         return ResponseEntity.status(HttpStatus.CREATED).body(departureService.createDeparture(slug, dto));
     }
 
+    @PutMapping
+    public ResponseEntity<List<TrekDeparture>> replaceDepartures(
+            @PathVariable String slug,
+            @RequestBody List<TrekDepartureRequestDTO> departures
+    ) {
+        return ResponseEntity.ok(departureService.replaceDeparturesForTrek(slug, departures));
+    }
+
     @PatchMapping("/{departureId}")
     public ResponseEntity<TrekDeparture> updateDeparture(
             @PathVariable String slug,

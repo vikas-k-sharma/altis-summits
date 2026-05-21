@@ -9,6 +9,7 @@ import com.altis.altissummits.repository.TrekRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -58,6 +59,31 @@ public class TrekDepartureService {
 
         validateSeatCapacity(departure.getTotalSeats(), departure.getAvailableSeats());
         return departureRepository.save(departure);
+    }
+
+    @Transactional
+    public List<TrekDeparture> replaceDeparturesForTrek(String slug, List<TrekDepartureRequestDTO> departureDtos) {
+        validateBulkRequest(departureDtos);
+
+        Trek trek = findTrekBySlug(slug);
+        departureRepository.deleteByTrekSlug(slug);
+
+        List<TrekDeparture> departures = departureDtos.stream()
+                .map(dto -> {
+                    TrekDeparture departure = new TrekDeparture();
+                    departure.setTrek(trek);
+                    applyFields(departure, dto, false);
+
+                    if (departure.getAvailableSeats() == null) {
+                        departure.setAvailableSeats(departure.getTotalSeats());
+                    }
+
+                    return departure;
+                })
+                .toList();
+
+        departureRepository.saveAll(departures);
+        return departureRepository.findByTrekSlugOrderByStartDateAsc(slug);
     }
 
     public TrekDeparture updateDeparture(String slug, Long departureId, TrekDepartureRequestDTO dto) {
@@ -115,6 +141,16 @@ public class TrekDepartureService {
     private void validateUpdateRequest(TrekDepartureRequestDTO dto) {
         validateRequestBody(dto);
         validateCommonFields(dto);
+    }
+
+    private void validateBulkRequest(List<TrekDepartureRequestDTO> departureDtos) {
+        if (departureDtos == null) {
+            throw badRequest("Departure list is required.");
+        }
+
+        for (TrekDepartureRequestDTO dto : departureDtos) {
+            validateCreateRequest(dto);
+        }
     }
 
     private void validateCommonFields(TrekDepartureRequestDTO dto) {

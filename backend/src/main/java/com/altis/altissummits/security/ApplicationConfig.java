@@ -29,10 +29,13 @@ public class ApplicationConfig {
                 com.altis.altissummits.entity.User user = userRepository.findByEmail(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found in database"));
 
+                // Put your actual test email right here
+                String role = (username.equals("admin@altis.com")) ? "ADMIN" : "USER";
+
                 return org.springframework.security.core.userdetails.User.builder()
                         .username(user.getEmail())
                         .password(user.getPassword())
-                        .roles("USER")
+                        .roles(role)
                         .build();
             }
         };

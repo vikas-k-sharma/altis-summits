@@ -1,5 +1,6 @@
 package com.altis.altissummits.controller;
 
+import com.altis.altissummits.dto.TrekRequestDTO;
 import com.altis.altissummits.entity.Trek;
 import com.altis.altissummits.service.TrekService;
 import lombok.RequiredArgsConstructor;
@@ -40,11 +41,11 @@ public class TrekController {
         return ResponseEntity.ok(trekService.getTrekBySlug(slug));
     }
 
-    @PostMapping
-    public ResponseEntity<Trek> createTrek(@RequestBody Trek trek) {
-        Trek createdTrek = trekService.createTrek(trek);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdTrek);
-    }
+//    @PostMapping
+//    public ResponseEntity<Trek> createTrek(@RequestBody Trek trek) {
+//        Trek createdTrek = trekService.createTrek(trek);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(createdTrek);
+//    }
 
     // 5. GET /api/v1/treks/map - Fetch data specifically formatted for frontend maps
     @GetMapping("/map")
@@ -73,5 +74,18 @@ public class TrekController {
         userLocation.setSRID(WGS_84_SRID);
 
         return ResponseEntity.ok(trekService.getTreksNearby(userLocation, radius));
+    }
+
+    @PostMapping
+    public ResponseEntity<Trek> createAdminTrek(@RequestBody TrekRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(trekService.createAdminTrek(dto));
+    }
+
+    @PutMapping("/{slug}")
+    public ResponseEntity<Trek> updateAdminTrek(
+            @PathVariable String slug,
+            @RequestBody TrekRequestDTO dto
+    ) {
+        return ResponseEntity.ok(trekService.updateAdminTrek(slug, dto));
     }
 }

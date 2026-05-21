@@ -16,6 +16,10 @@ public interface TrekRepository extends JpaRepository<Trek, Long> {
     // 1. Fetch for SEO URLs
     Optional<Trek> findBySlug(String slug);
 
+    boolean existsBySlug(String slug);
+
+    boolean existsBySlugAndIdNot(String slug, Long id);
+
     // 2. Fetch only active treks for the main catalog
     List<Trek> findByIsActiveTrue();
 
